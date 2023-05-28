@@ -28,3 +28,11 @@ export class VarStmt extends Stmt {
     this.initializer = initializer;
   }
 }
+
+export class BlockStmt extends Stmt {
+  statements: Stmt[];
+  constructor(statements: Stmt[]) {
+    super();
+    this.statements = statements;
+  }
+}

@@ -47,3 +47,13 @@ export class VariableExpr extends Expr {
     this.name = name;
   }
 }
+
+export class AssignExpr extends Expr {
+  name: Token;
+  value: Expr;
+  constructor(name: Token, value: Expr) {
+    super();
+    this.name = name;
+    this.value = value;
+  }
+}

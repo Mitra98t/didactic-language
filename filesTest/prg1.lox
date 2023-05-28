@@ -1,4 +1,13 @@
-var a = 5 ;
-var b = 9;
-
-print (a+b);
+var a = "global a";
+{
+  {
+    var a = "inner a";
+    print a; // inner a
+    a = "inner a again";
+    print a; // inner a again
+  }
+  print a; // global a
+  a = "outer a again";
+  print a; // outer a again
+}
+print a; // outer a again

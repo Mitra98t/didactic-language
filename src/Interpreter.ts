@@ -1,5 +1,6 @@
 import { Environment } from "./Environment";
 import {
+  AssignExpr,
   BinaryExpr,
   Expr,
   GroupingExpr,
@@ -8,7 +9,13 @@ import {
   VariableExpr,
 } from "./Expressions";
 import { Lox, Nil } from "./Lox";
-import { ExpressionStmt, PrintStmt, Stmt, VarStmt } from "./Statements";
+import {
+  BlockStmt,
+  ExpressionStmt,
+  PrintStmt,
+  Stmt,
+  VarStmt,
+} from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -110,12 +117,14 @@ export class Interpreter {
       return Interpreter.visitLiteralExpr(expr);
     } else if (expr instanceof UnaryExpr) {
       return Interpreter.visitUnaryExpr(expr);
-    } else if (expr instanceof GroupingExpr) {
-      return Interpreter.visitGroupingExpr(expr);
     } else if (expr instanceof BinaryExpr) {
       return Interpreter.visitBinaryExpr(expr);
+    } else if (expr instanceof GroupingExpr) {
+      return Interpreter.visitGroupingExpr(expr);
     } else if (expr instanceof VariableExpr) {
       return Interpreter.visitVariableExpr(expr);
+    } else if (expr instanceof AssignExpr) {
+      return Interpreter.visitAssignExpr(expr);
     } else throw new Error("Unreachable code.");
   }
 
@@ -126,9 +135,30 @@ export class Interpreter {
       Interpreter.visitPrintStmt(stmt);
     } else if (stmt instanceof VarStmt) {
       Interpreter.visitVarStmt(stmt);
+    } else if (stmt instanceof BlockStmt) {
+      Interpreter.visitBlockStmt(stmt);
     } else {
       throw new Error("Unreachable code.");
     }
+  }
+
+  public static executeBlock(statements: Stmt[], environment: Environment) {
+    let previous: Environment = Interpreter.environment;
+    try {
+      Interpreter.environment = environment;
+      for (let i = 0; i < statements.length; i++) {
+        Interpreter.execute(statements[i]);
+      }
+    } finally {
+      Interpreter.environment = previous;
+    }
+  }
+
+  public static visitBlockStmt(stmt: BlockStmt): void {
+    Interpreter.executeBlock(
+      stmt.statements,
+      new Environment(Interpreter.environment)
+    );
   }
 
   public static visitExpressionStmt(stmt: ExpressionStmt): void {
@@ -148,6 +178,12 @@ export class Interpreter {
       value = Interpreter.evaluate(stmt.initializer);
     }
     Interpreter.environment.define(stmt.name.lexeme, value);
+  }
+
+  public static visitAssignExpr(expr: AssignExpr): Object {
+    let value: Object = Interpreter.evaluate(expr.value);
+    Interpreter.environment.assign(expr.name, value);
+    return value;
   }
 
   public static visitVariableExpr(expr: VariableExpr): Object {

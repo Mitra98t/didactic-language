@@ -1,4 +1,5 @@
 import {
+  AssignExpr,
   BinaryExpr,
   Expr,
   GroupingExpr,
@@ -7,7 +8,13 @@ import {
   VariableExpr,
 } from "./Expressions";
 import { Lox, Nil } from "./Lox";
-import { ExpressionStmt, PrintStmt, Stmt, VarStmt } from "./Statements";
+import {
+  BlockStmt,
+  ExpressionStmt,
+  PrintStmt,
+  Stmt,
+  VarStmt,
+} from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
 
@@ -75,12 +82,15 @@ export class Parser {
   }
 
   private expression(): Expr {
-    return this.equality();
+    return this.assignment();
   }
 
   private statement(): Stmt {
     if (this.match([TokenType.PRINT])) {
       return this.printStatement();
+    }
+    if (this.match([TokenType.LEFT_BRACE])) {
+      return new BlockStmt(this.block());
     }
 
     return this.expressionStatement();
@@ -96,6 +106,35 @@ export class Parser {
     let expr: Expr = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
     return new ExpressionStmt(expr);
+  }
+
+  private block(): Stmt[] {
+    let statements: Stmt[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      statements.push(this.declaration());
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
+  }
+
+  private assignment(): Expr {
+    let expr: Expr = this.equality();
+
+    if (this.match([TokenType.EQUAL])) {
+      let equals: Token = this.previous();
+      let value: Expr = this.assignment();
+
+      if (expr instanceof VariableExpr) {
+        let name: Token = expr.name;
+        return new AssignExpr(name, value);
+      }
+
+      this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
   }
 
   private equality(): Expr {
