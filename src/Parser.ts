@@ -50,7 +50,6 @@ export class Parser {
 
   public parse(): Stmt[] {
     let statements: Stmt[] = [];
-
     while (!this.isAtEnd()) {
       statements.push(this.declaration());
     }
@@ -281,6 +280,43 @@ export class Parser {
         return new AssignExpr(name, value);
       }
 
+      this.error(equals, "Invalid assignment target.");
+    }
+    //TODO STAREQ & SLASHEQ
+    else if (
+      this.match([
+        TokenType.PLUS_EQUAL,
+        TokenType.MINUS_EQUAL,
+        TokenType.SLASH_EQUAL,
+        TokenType.STAR_EQUAL,
+      ])
+    ) {
+      let equals: Token = this.previous();
+      let value: Expr = this.assignment();
+      switch (equals.type) {
+        case TokenType.PLUS_EQUAL:
+          equals = new Token(TokenType.PLUS, "+", null, equals.line);
+          break;
+        case TokenType.MINUS_EQUAL:
+          equals = new Token(TokenType.MINUS, "-", null, equals.line);
+          break;
+        case TokenType.SLASH_EQUAL:
+          equals = new Token(TokenType.SLASH, "/", null, equals.line);
+          break;
+        case TokenType.STAR_EQUAL:
+          equals = new Token(TokenType.STAR, "*", null, equals.line);
+          break;
+        default:
+          throw new Error("Unreachable");
+      }
+
+      if (expr instanceof VariableExpr) {
+        let name: Token = expr.name;
+        return new AssignExpr(
+          name,
+          new BinaryExpr(new VariableExpr(name), equals, value)
+        );
+      }
       this.error(equals, "Invalid assignment target.");
     }
 

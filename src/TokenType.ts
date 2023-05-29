@@ -7,10 +7,14 @@ export enum TokenType {
   COMMA,
   DOT,
   MINUS,
+  MINUS_EQUAL,
   PLUS,
+  PLUS_EQUAL,
   SEMICOLON,
   SLASH,
+  SLASH_EQUAL,
   STAR,
+  STAR_EQUAL,
 
   // One or two character tokens.
   BANG,
@@ -48,4 +52,5 @@ export enum TokenType {
   WHILE,
 
   EOF,
+  ERROR,
 }
