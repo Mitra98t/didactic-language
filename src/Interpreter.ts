@@ -1,4 +1,5 @@
-import { Environment, EnvironmentError } from "./Environment";
+import { Environment } from "./Environment";
+import { EnvironmentError, ImpossibleError } from "./Errors";
 import {
   AssignExpr,
   BinaryExpr,
@@ -28,16 +29,7 @@ import {
 } from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
-
-export class RuntimeError extends Error {
-  token: Token;
-
-  constructor(token: Token, msg: string) {
-    super(msg);
-    this.token = token;
-  }
-}
-
+import { RuntimeError } from "./Errors";
 export class Interpreter {
   private static environment: Environment = new Environment();
   constructor() {}
@@ -50,8 +42,7 @@ export class Interpreter {
     } catch (error) {
       if (error instanceof RuntimeError) {
         Lox.runtimeError(error);
-      }
-      else if (error instanceof EnvironmentError){
+      } else if (error instanceof EnvironmentError) {
         Lox.environmentError(error);
       }
     }
@@ -85,7 +76,7 @@ export class Interpreter {
     }
 
     // Unreachable.
-    throw new Error("Unreachable code.");
+    throw new ImpossibleError("Unreachable code.");
   }
 
   public static visitGroupingExpr(expr: GroupingExpr): Object {
@@ -134,7 +125,7 @@ export class Interpreter {
         Interpreter.checkNumberOperands(expr.operator, [left, right]);
         return (left as number) * (right as number);
     }
-    throw new Error("Unreachable code.");
+    throw new ImpossibleError("Unreachable code.");
   }
 
   private static visitCallExpr(expr: CallExpr): Object {
@@ -179,7 +170,7 @@ export class Interpreter {
       return Interpreter.visitAssignExpr(expr);
     } else if (expr instanceof CallExpr) {
       return Interpreter.visitCallExpr(expr);
-    } else throw new Error("Unreachable code.");
+    } else throw new ImpossibleError("Unreachable code.");
   }
 
   public static execute(stmt: Stmt): void {
@@ -203,7 +194,7 @@ export class Interpreter {
     } else if (stmt instanceof ReturnStmt) {
       Interpreter.visitReturnStmt(stmt);
     } else {
-      throw new Error("Unreachable code.");
+      throw new ImpossibleError("Unreachable code.");
     }
   }
 
@@ -339,7 +330,7 @@ export class Interpreter {
       }
       throw new RuntimeError(operator, `Operands must be numbers. ${operator}`);
     } else {
-      throw new Error("Unreachable code. in checkNumberOperand");
+      throw new ImpossibleError("Unreachable code. in checkNumberOperand");
     }
   }
 }

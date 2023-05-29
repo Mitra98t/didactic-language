@@ -1,4 +1,4 @@
-import { RuntimeError } from "./Interpreter";
+import { RuntimeError } from "./Errors";
 
 export class Return extends Error {
   value: Object;

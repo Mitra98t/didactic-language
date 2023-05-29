@@ -1,6 +1,6 @@
+import { EnvironmentError } from "./Errors";
 import { Token } from "./Token";
 
-export class EnvironmentError extends Error {}
 export class Environment {
   enclosing: Environment | null = null;
   private values: Map<string, Object> = new Map<string, Object>();

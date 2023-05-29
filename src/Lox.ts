@@ -5,15 +5,24 @@ import { TokenType } from "./TokenType";
 import { Expr } from "./Expressions";
 import { Parser } from "./Parser";
 import { prettyPrint } from "./Utility";
-import { Interpreter, RuntimeError } from "./Interpreter";
+import { Interpreter } from "./Interpreter";
 import { Stmt } from "./Statements";
-import { EnvironmentError } from "./Environment";
+import { EnvironmentError, ParserError, RuntimeError } from "./Errors";
 
 export class Nil extends Object {}
 
 export class Lox {
   private static hadError: boolean = false;
   private static hadRuntimeError: boolean = false;
+
+  getHadError(): boolean {
+    return Lox.hadError;
+  }
+
+  getHadRuntimeError(): boolean {
+    return Lox.hadRuntimeError;
+  }
+
   private static interpreter: Interpreter = new Interpreter();
 
   static main(args: string[]): void {
@@ -55,20 +64,17 @@ export class Lox {
   }
 
   private static run(source: string): void {
-    try {
-      let scanner: Scanner = new Scanner(source);
-      let tokens: Token[] = scanner.scanTokens();
-      let parser: Parser = new Parser(tokens);
-      let statements: Stmt[] = parser.parse();
-      if (Lox.hadError) return;
+    let scanner: Scanner = new Scanner(source);
+    let tokens: Token[] = scanner.scanTokens();
+    if (Lox.hadError) return;
+    let parser: Parser = new Parser(tokens);
+    let statements: Stmt[] = parser.parse();
+    if (Lox.hadError) return;
 
-      this.interpreter.interpret(statements);
-    } catch (error) {
-      console.error(error);
-    }
+    this.interpreter.interpret(statements);
   }
 
-  public static error(token: Token, message: string): void {
+  public static errorToken(token: Token, message: string): void {
     if (token.type == TokenType.EOF) {
       this.report(token.line, " at end", message);
     } else {
@@ -81,17 +87,27 @@ export class Lox {
   }
 
   public static runtimeError(error: RuntimeError): void {
-    console.error(error.message + "\n[line " + error.token.line + "]");
+    console.log("runtimeError");
+    console.error("[line " + error.token.line + "] " + error.message);
     this.hadRuntimeError = true;
   }
 
-  public static environmentError(message: EnvironmentError): void {
-    console.error(message.message);
+  public static environmentError(error: EnvironmentError): void {
+    console.log("environmentError");
+    console.error(error.message);
     this.hadRuntimeError = true;
+  }
+
+  public static parserError(error: ParserError): void {
+    console.log("parserError");
+    console.log(error.token.lexeme);
+    console.error("[line " + error.token.line + "] " + error.message);
+    this.hadError = true;
   }
 
   private static report(line: number, where: string, message: string): void {
-    console.log("[line " + line + "] Error" + where + ": " + message);
+    console.log("qualsiasialtracosaError");
+    console.error("[line " + line + "] Error" + where + ": " + message);
     this.hadError = true;
   }
 }

@@ -24,21 +24,7 @@ import {
 } from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
-
-class ParserError extends Error {
-  token: Token;
-  constructor(token: Token, msg: string) {
-    super(msg);
-    this.token = token;
-
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ParserError.prototype);
-  }
-
-  sayHello() {
-    return "hello " + this.message;
-  }
-}
+import { ImpossibleError, ParserError } from "./Errors";
 
 export class Parser {
   tokens: Token[];
@@ -49,12 +35,18 @@ export class Parser {
   }
 
   public parse(): Stmt[] {
-    let statements: Stmt[] = [];
-    while (!this.isAtEnd()) {
-      statements.push(this.declaration());
+    try {
+      let statements: Stmt[] = [];
+      while (!this.isAtEnd()) {
+        statements.push(this.declaration());
+      }
+      return statements;
+    } catch (error) {
+      if (error instanceof ParserError) {
+        Lox.parserError(error);
+      }
+      return [];
     }
-
-    return statements;
   }
 
   private declaration(): Stmt {
@@ -70,8 +62,8 @@ export class Parser {
     } catch (error) {
       if (error instanceof ParserError) {
         this.synchronize();
+        Lox.parserError(error);
       }
-      console.error(error);
       return Nil;
     }
   }
@@ -129,7 +121,7 @@ export class Parser {
     if (this.match([TokenType.LEFT_BRACE])) {
       return new BlockStmt(this.block());
     }
-
+    
     return this.expressionStatement();
   }
 
@@ -307,7 +299,7 @@ export class Parser {
           equals = new Token(TokenType.STAR, "*", null, equals.line);
           break;
         default:
-          throw new Error("Unreachable");
+          throw new ImpossibleError("Unreachable");
       }
 
       if (expr instanceof VariableExpr) {
@@ -496,7 +488,7 @@ export class Parser {
       return this.advance();
     }
 
-    throw new Error(message);
+    throw new ParserError(this.peek(),message);
   }
 
   private advance(): Token {
@@ -519,8 +511,9 @@ export class Parser {
   }
 
   private error(token: Token, message: string): ParserError {
-    Lox.error(token, message);
-    return new ParserError(token, message);
+    let parserError: ParserError = new ParserError(token, message)
+    Lox.parserError(parserError);
+    return parserError;
   }
 
   private synchronize(): void {
