@@ -11,6 +11,18 @@ export class PrintStmt extends Stmt {
   }
 }
 
+export class AssertStmt extends Stmt {
+  name: Token;
+  expression: Expr;
+  check: Expr;
+  constructor(name: Token, expression: Expr, check: Expr) {
+    super();
+    this.name = name;
+    this.expression = expression;
+    this.check = check;
+  }
+}
+
 export class ExpressionStmt extends Stmt {
   expression: Expr;
   constructor(expression: Expr) {
@@ -56,5 +68,27 @@ export class WhileStmt extends Stmt {
     super();
     this.condition = condition;
     this.body = body;
+  }
+}
+
+export class FunctionStmt extends Stmt {
+  name: Token;
+  params: Token[];
+  body: Stmt[];
+  constructor(name: Token, params: Token[], body: Stmt[]) {
+    super();
+    this.name = name;
+    this.params = params;
+    this.body = body;
+  }
+}
+
+export class ReturnStmt extends Stmt {
+  keyword: Token;
+  value: Expr;
+  constructor(keyword: Token, value: Expr) {
+    super();
+    this.keyword = keyword;
+    this.value = value;
   }
 }

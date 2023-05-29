@@ -7,6 +7,7 @@ import { Parser } from "./Parser";
 import { prettyPrint } from "./Utility";
 import { Interpreter, RuntimeError } from "./Interpreter";
 import { Stmt } from "./Statements";
+import { EnvironmentError } from "./Environment";
 
 export class Nil extends Object {}
 
@@ -54,14 +55,17 @@ export class Lox {
   }
 
   private static run(source: string): void {
-    let scanner: Scanner = new Scanner(source);
-    let tokens: Token[] = scanner.scanTokens();
+    try {
+      let scanner: Scanner = new Scanner(source);
+      let tokens: Token[] = scanner.scanTokens();
+      let parser: Parser = new Parser(tokens);
+      let statements: Stmt[] = parser.parse();
+      if (Lox.hadError) return;
 
-    let parser = new Parser(tokens);
-    let statements: Stmt[] = parser.parse();
-    if (Lox.hadError) return;
-
-    this.interpreter.interpret(statements);
+      this.interpreter.interpret(statements);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   public static error(token: Token, message: string): void {
@@ -77,7 +81,12 @@ export class Lox {
   }
 
   public static runtimeError(error: RuntimeError): void {
-    console.log(error.message + "\n[line " + error.token.line + "]");
+    console.error(error.message + "\n[line " + error.token.line + "]");
+    this.hadRuntimeError = true;
+  }
+
+  public static environmentError(message: EnvironmentError): void {
+    console.error(message.message);
     this.hadRuntimeError = true;
   }
 

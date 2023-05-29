@@ -69,3 +69,15 @@ export class LogicalExpr extends Expr {
     this.right = right;
   }
 }
+
+export class CallExpr extends Expr {
+  callee: Expr;
+  paren: Token;
+  args: Expr[];
+  constructor(callee: Expr, paren: Token, args: Expr[]) {
+    super();
+    this.callee = callee;
+    this.paren = paren;
+    this.args = args;
+  }
+}

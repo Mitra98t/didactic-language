@@ -11,7 +11,9 @@ export class Scanner {
 
   private static keywords: Map<string, TokenType> = new Map([
     ["and", TokenType.AND],
+    ["assert", TokenType.ASSERT],
     ["class", TokenType.CLASS],
+    ["do", TokenType.DO],
     ["else", TokenType.ELSE],
     ["false", TokenType.FALSE],
     ["for", TokenType.FOR],

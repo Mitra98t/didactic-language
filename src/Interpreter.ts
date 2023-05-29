@@ -1,7 +1,8 @@
-import { Environment } from "./Environment";
+import { Environment, EnvironmentError } from "./Environment";
 import {
   AssignExpr,
   BinaryExpr,
+  CallExpr,
   Expr,
   GroupingExpr,
   LiteralExpr,
@@ -10,11 +11,17 @@ import {
   VariableExpr,
 } from "./Expressions";
 import { Lox, Nil } from "./Lox";
+import { LoxCallable } from "./LoxCallable";
+import { LoxFunction } from "./LoxFunction";
+import { Return } from "./Return";
 import {
+  AssertStmt,
   BlockStmt,
   ExpressionStmt,
+  FunctionStmt,
   IfStmt,
   PrintStmt,
+  ReturnStmt,
   Stmt,
   VarStmt,
   WhileStmt,
@@ -43,6 +50,9 @@ export class Interpreter {
     } catch (error) {
       if (error instanceof RuntimeError) {
         Lox.runtimeError(error);
+      }
+      else if (error instanceof EnvironmentError){
+        Lox.environmentError(error);
       }
     }
   }
@@ -127,6 +137,31 @@ export class Interpreter {
     throw new Error("Unreachable code.");
   }
 
+  private static visitCallExpr(expr: CallExpr): Object {
+    let callee: Object = Interpreter.evaluate(expr.callee);
+
+    let args: Object[] = [];
+    for (let i = 0; i < expr.args.length; i++) {
+      args.push(Interpreter.evaluate(expr.args[i]));
+    }
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(
+        expr.paren,
+        "Can only call functions and classes."
+      );
+    }
+
+    let func: LoxCallable = callee as LoxCallable;
+    if (args.length != func.arity()) {
+      throw new RuntimeError(
+        expr.paren,
+        `Expected ${func.arity()} arguments but got ${args.length}.`
+      );
+    }
+    return func.call(new Interpreter(), args);
+  }
+
   private static evaluate(expr: Expr): Object {
     if (expr instanceof LogicalExpr) {
       return Interpreter.visitLogicalExpr(expr);
@@ -142,6 +177,8 @@ export class Interpreter {
       return Interpreter.visitVariableExpr(expr);
     } else if (expr instanceof AssignExpr) {
       return Interpreter.visitAssignExpr(expr);
+    } else if (expr instanceof CallExpr) {
+      return Interpreter.visitCallExpr(expr);
     } else throw new Error("Unreachable code.");
   }
 
@@ -155,10 +192,16 @@ export class Interpreter {
       Interpreter.visitWhileStmt(stmt);
     } else if (stmt instanceof PrintStmt) {
       Interpreter.visitPrintStmt(stmt);
+    } else if (stmt instanceof AssertStmt) {
+      Interpreter.visitAssertStmt(stmt);
     } else if (stmt instanceof VarStmt) {
       Interpreter.visitVarStmt(stmt);
     } else if (stmt instanceof BlockStmt) {
       Interpreter.visitBlockStmt(stmt);
+    } else if (stmt instanceof FunctionStmt) {
+      Interpreter.visitFunctionStmt(stmt);
+    } else if (stmt instanceof ReturnStmt) {
+      Interpreter.visitReturnStmt(stmt);
     } else {
       throw new Error("Unreachable code.");
     }
@@ -188,6 +231,11 @@ export class Interpreter {
     return;
   }
 
+  public static visitFunctionStmt(stmt: FunctionStmt): void {
+    let func: LoxFunction = new LoxFunction(stmt, Interpreter.environment);
+    Interpreter.environment.define(stmt.name.lexeme, func);
+  }
+
   public static visitIfStmt(stmt: IfStmt): void {
     if (Interpreter.isTruthly(Interpreter.evaluate(stmt.condition))) {
       Interpreter.execute(stmt.thenBranch);
@@ -198,8 +246,28 @@ export class Interpreter {
 
   public static visitPrintStmt(stmt: PrintStmt): void {
     let value: Object = Interpreter.evaluate(stmt.expression);
-    console.log(value);
+    if (value instanceof LoxFunction) console.log(value.toString());
+    else console.log(value);
     return;
+  }
+
+  public static visitAssertStmt(stmt: AssertStmt): void {
+    let value: Object = Interpreter.evaluate(stmt.expression);
+    let check: Object = Interpreter.evaluate(stmt.check);
+    if (value != check) {
+      throw new RuntimeError(
+        stmt.name,
+        `Assert failed: expected ${check} but got ${value}.`
+      );
+    }
+  }
+
+  public static visitReturnStmt(stmt: ReturnStmt): void {
+    let value: Object = Nil;
+    if (stmt.value !== Nil) {
+      value = Interpreter.evaluate(stmt.value);
+    }
+    throw new Return(value);
   }
 
   public static visitVarStmt(stmt: VarStmt): void {

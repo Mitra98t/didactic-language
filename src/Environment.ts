@@ -1,5 +1,6 @@
 import { Token } from "./Token";
 
+export class EnvironmentError extends Error {}
 export class Environment {
   enclosing: Environment | null = null;
   private values: Map<string, Object> = new Map<string, Object>();
@@ -23,7 +24,7 @@ export class Environment {
       return this.enclosing.get(name);
     }
 
-    throw new Error(`Undefined variable '${name.lexeme}'.`);
+    throw new EnvironmentError(`Undefined variable '${name.lexeme}'.`);
   }
 
   public assign(name: Token, value: Object): void {
@@ -38,6 +39,6 @@ export class Environment {
       return;
     }
 
-    throw new Error(`Undefined variable '${name.lexeme}'.`);
+    throw new EnvironmentError(`Undefined variable '${name.lexeme}'.`);
   }
 }
