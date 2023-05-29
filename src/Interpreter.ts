@@ -1,6 +1,8 @@
 import { Environment } from "./Environment";
 import { EnvironmentError, ImpossibleError } from "./Errors";
 import {
+  ArrayAccessExpr,
+  ArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -155,6 +157,14 @@ export class Interpreter {
     return func.call(new Interpreter(), args);
   }
 
+  private static visitArrayExpr(expr: ArrayExpr): Object[] {
+    let values: Object[] = [];
+    for (const e of expr.values) {
+      values.push(this.evaluate(e));
+    }
+    return values;
+  }
+
   private static evaluate(expr: Expr): Object {
     if (expr instanceof LogicalExpr) {
       return Interpreter.visitLogicalExpr(expr);
@@ -168,10 +178,14 @@ export class Interpreter {
       return Interpreter.visitGroupingExpr(expr);
     } else if (expr instanceof VariableExpr) {
       return Interpreter.visitVariableExpr(expr);
+    } else if (expr instanceof ArrayAccessExpr) {
+      return Interpreter.visitArrayAccessExpr(expr);
     } else if (expr instanceof AssignExpr) {
       return Interpreter.visitAssignExpr(expr);
     } else if (expr instanceof CallExpr) {
       return Interpreter.visitCallExpr(expr);
+    } else if (expr instanceof ArrayExpr) {
+      return Interpreter.visitArrayExpr(expr);
     } else throw new ImpossibleError("Unreachable code.");
   }
 
@@ -247,12 +261,20 @@ export class Interpreter {
   public static visitAssertStmt(stmt: AssertStmt): void {
     let value: Object = Interpreter.evaluate(stmt.expression);
     let check: Object = Interpreter.evaluate(stmt.check);
-    if (value != check) {
+    let assertFailed: boolean = false;
+    if (Array.isArray(value) && Array.isArray(check)) {
+      for (let i = 0; i < value.length; i++) {
+        if (value[i] != check[i]) assertFailed = true;
+      }
+    } else if (value != check) {
+      assertFailed = true;
+    }
+
+    if (assertFailed)
       throw new RuntimeError(
         stmt.name,
         `Assert failed: expected ${check} but got ${value}.`
       );
-    }
   }
 
   public static visitReturnStmt(stmt: ReturnStmt): void {
@@ -291,6 +313,18 @@ export class Interpreter {
 
   public static visitVariableExpr(expr: VariableExpr): Object {
     return Interpreter.lookUpVariable(expr.name, expr);
+  }
+
+  //TODO convert to RuntimeArray
+  public static visitArrayAccessExpr(expr: ArrayAccessExpr): Object {
+    let arrayV: Object = Interpreter.evaluate(expr.arr);
+    let indexV: Object = Interpreter.evaluate(expr.index);
+    if (!Array.isArray(arrayV)) throw new Error(`is not an array.`);
+    if (typeof indexV !== "number")
+      throw new Error(`Index of array must be a number.`);
+    if ((indexV as number) < 0 || (indexV as number) > arrayV.length)
+      throw new Error(`Index out of bound.`);
+    return arrayV[indexV as number];
   }
 
   private static isTruthly(object: Object): boolean {

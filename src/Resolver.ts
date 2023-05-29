@@ -1,5 +1,7 @@
 import { ResolverError } from "./Errors";
 import {
+  ArrayAccessExpr,
+  ArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -148,6 +150,15 @@ export class Resolver {
     this.resolveExpr(expr.right);
   }
 
+  visitArrayExpr(expr: ArrayExpr): void {
+    for (const e of expr.values) this.resolveExpr(e);
+  }
+
+  visitArrayAccessExpr(expr: ArrayAccessExpr): void {
+    this.resolveExpr(expr.arr);
+    this.resolveExpr(expr.index);
+  }
+
   public resolveStmts(statements: Stmt[]): void {
     for (let statement of statements) {
       this.resolveStmt(statement);
@@ -195,8 +206,12 @@ export class Resolver {
       this.visitLogicalExpr(expr);
     } else if (expr instanceof UnaryExpr) {
       this.visitUnaryExpr(expr);
+    } else if (expr instanceof ArrayExpr) {
+      this.visitArrayExpr(expr);
+    } else if (expr instanceof ArrayAccessExpr) {
+      this.visitArrayAccessExpr(expr);
     } else {
-      throw new Error("Unknown expression type");
+      throw new Error(`Unknown expression type ${JSON.stringify(expr)}`);
     }
   }
 

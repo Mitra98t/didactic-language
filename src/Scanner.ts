@@ -70,6 +70,12 @@ export class Scanner {
       case ".":
         this.addToken(TokenType.DOT);
         break;
+      case "[":
+        this.addToken(TokenType.LEFT_SQUARE);
+        break;
+      case "]":
+        this.addToken(TokenType.RIGHT_SQUARE);
+        break;
       case "-":
         this.addToken(
           this.match("=") ? TokenType.MINUS_EQUAL : TokenType.MINUS

@@ -8,6 +8,7 @@
     "build": "tsc",
     "exec": "node dist/main.js",
     "start": "npm run build && npm run exec",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist", 
+    "showOff": "npm run start && echo '\n------\n' && cat filesTest/prg1.lox && echo '\n\n'"
   }
 }

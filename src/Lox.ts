@@ -100,7 +100,6 @@ export class Lox {
 
   public static parserError(error: ParserError): void {
     console.log("parserError");
-    console.log(error.token.lexeme);
     console.error("[line " + error.token.line + "] " + error.message);
     this.hadError = true;
   }

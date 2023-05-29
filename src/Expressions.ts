@@ -81,3 +81,21 @@ export class CallExpr extends Expr {
     this.args = args;
   }
 }
+
+export class ArrayExpr extends Expr {
+  values: Expr[];
+  constructor(values: Expr[]) {
+    super();
+    this.values = values;
+  }
+}
+
+export class ArrayAccessExpr extends Expr {
+  arr: Expr;
+  index: Expr;
+  constructor(arr: Expr, index: Expr) {
+    super();
+    this.arr = arr;
+    this.index = index;
+  }
+}

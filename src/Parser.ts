@@ -1,4 +1,6 @@
 import {
+  ArrayAccessExpr,
+  ArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -399,7 +401,7 @@ export class Parser {
       return new UnaryExpr(operator, right);
     }
 
-    return this.call();
+    return this.arrayAccess();
   }
 
   private call(): Expr {
@@ -411,6 +413,20 @@ export class Parser {
       } else {
         break;
       }
+    }
+
+    return expr;
+  }
+
+  /* TODO array access could have another array access on the left side of the expression
+    This case is currently unsupported
+  */
+  private arrayAccess(): Expr {
+    let expr: Expr = this.expression();
+    if (this.match([TokenType.LEFT_SQUARE])) {
+      let index = this.expression();
+      this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.");
+      expr = new ArrayAccessExpr(expr, index);
     }
 
     return expr;
@@ -451,7 +467,25 @@ export class Parser {
     }
 
     if (this.match([TokenType.IDENTIFIER])) {
-      return new VariableExpr(this.previous());
+      let name: Token = this.previous();
+      // if (this.match([TokenType.LEFT_SQUARE])) {
+      //   let index: Expr = this.expression();
+      //   this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.")
+      //   return new ArrayAccessExpr(name, index)
+      // }
+      return new VariableExpr(name);
+    }
+
+    if (this.match([TokenType.LEFT_SQUARE])) {
+      let expressions: Expr[] = [];
+      if (!this.match([TokenType.RIGHT_SQUARE])) {
+        //check if immediatly close
+        do {
+          expressions.push(this.expression());
+        } while (this.match([TokenType.COMMA]));
+        this.consume(TokenType.RIGHT_SQUARE, "Need ']' to close arrays");
+      }
+      return new ArrayExpr(expressions);
     }
 
     if (this.match([TokenType.LEFT_PAREN])) {
