@@ -4,6 +4,7 @@ import {
   Expr,
   GroupingExpr,
   LiteralExpr,
+  LogicalExpr,
   UnaryExpr,
   VariableExpr,
 } from "./Expressions";
@@ -11,6 +12,7 @@ import { Lox, Nil } from "./Lox";
 import {
   BlockStmt,
   ExpressionStmt,
+  IfStmt,
   PrintStmt,
   Stmt,
   VarStmt,
@@ -81,11 +83,16 @@ export class Parser {
     return new VarStmt(name, initializer);
   }
 
+  
+
   private expression(): Expr {
     return this.assignment();
   }
 
   private statement(): Stmt {
+    if (this.match([TokenType.IF])) {
+      return this.ifStatement();
+    }
     if (this.match([TokenType.PRINT])) {
       return this.printStatement();
     }
@@ -94,6 +101,20 @@ export class Parser {
     }
 
     return this.expressionStatement();
+  }
+
+  private ifStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+    let condition: Expr = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
+
+    let thenBranch: Stmt = this.statement();
+    let elseBranch: Stmt = Nil;
+    if (this.match([TokenType.ELSE])) {
+      elseBranch = this.statement();
+    }
+
+    return new IfStmt(condition, thenBranch, elseBranch);
   }
 
   private printStatement(): Stmt {
@@ -120,7 +141,7 @@ export class Parser {
   }
 
   private assignment(): Expr {
-    let expr: Expr = this.equality();
+    let expr: Expr = this.or();
 
     if (this.match([TokenType.EQUAL])) {
       let equals: Token = this.previous();
@@ -132,6 +153,30 @@ export class Parser {
       }
 
       this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private or(): Expr {
+    let expr: Expr = this.and();
+
+    while (this.match([TokenType.OR])) {
+      let operator: Token = this.previous();
+      let right: Expr = this.and();
+      expr = new LogicalExpr(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private and(): Expr {
+    let expr: Expr = this.equality();
+
+    while (this.match([TokenType.AND])) {
+      let operator: Token = this.previous();
+      let right: Expr = this.equality();
+      expr = new LogicalExpr(expr, operator, right);
     }
 
     return expr;

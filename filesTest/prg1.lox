@@ -1,13 +1,6 @@
-var a = "global a";
-{
-  {
-    var a = "inner a";
-    print a; // inner a
-    a = "inner a again";
-    print a; // inner a again
-  }
-  print a; // global a
-  a = "outer a again";
-  print a; // outer a again
+if("" == 0){
+  print "true";
 }
-print a; // outer a again
+else{
+  print "false";
+}

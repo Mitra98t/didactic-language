@@ -5,6 +5,7 @@ import {
   Expr,
   GroupingExpr,
   LiteralExpr,
+  LogicalExpr,
   UnaryExpr,
   VariableExpr,
 } from "./Expressions";
@@ -12,6 +13,7 @@ import { Lox, Nil } from "./Lox";
 import {
   BlockStmt,
   ExpressionStmt,
+  IfStmt,
   PrintStmt,
   Stmt,
   VarStmt,
@@ -46,6 +48,18 @@ export class Interpreter {
 
   public static visitLiteralExpr(expr: LiteralExpr): Object {
     return expr.value;
+  }
+
+  public static visitLogicalExpr(expr: LogicalExpr): Object {
+    let left: Object = Interpreter.evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      if (Interpreter.isTruthly(left)) return left;
+    } else {
+      if (!Interpreter.isTruthly(left)) return left;
+    }
+
+    return Interpreter.evaluate(expr.right);
   }
 
   public static visitUnaryExpr(expr: UnaryExpr): Object {
@@ -113,7 +127,9 @@ export class Interpreter {
   }
 
   private static evaluate(expr: Expr): Object {
-    if (expr instanceof LiteralExpr) {
+    if (expr instanceof LogicalExpr) {
+      return Interpreter.visitLogicalExpr(expr);
+    } else if (expr instanceof LiteralExpr) {
       return Interpreter.visitLiteralExpr(expr);
     } else if (expr instanceof UnaryExpr) {
       return Interpreter.visitUnaryExpr(expr);
@@ -131,6 +147,8 @@ export class Interpreter {
   public static execute(stmt: Stmt): void {
     if (stmt instanceof ExpressionStmt) {
       Interpreter.visitExpressionStmt(stmt);
+    } else if (stmt instanceof IfStmt) {
+      Interpreter.visitIfStmt(stmt);
     } else if (stmt instanceof PrintStmt) {
       Interpreter.visitPrintStmt(stmt);
     } else if (stmt instanceof VarStmt) {
@@ -166,6 +184,14 @@ export class Interpreter {
     return;
   }
 
+  public static visitIfStmt(stmt: IfStmt): void {
+    if (Interpreter.isTruthly(Interpreter.evaluate(stmt.condition))) {
+      Interpreter.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch !== null) {
+      Interpreter.execute(stmt.elseBranch);
+    }
+  }
+
   public static visitPrintStmt(stmt: PrintStmt): void {
     let value: Object = Interpreter.evaluate(stmt.expression);
     console.log(value);
@@ -197,6 +223,14 @@ export class Interpreter {
 
     if (typeof object === "boolean") {
       return object as boolean;
+    }
+
+    if(typeof object === "number") {
+      return object as number !== 0;
+    }
+
+    if(typeof object === "string") {
+      return (object as string).length !== 0;
     }
 
     return true;

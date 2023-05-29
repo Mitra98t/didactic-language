@@ -36,3 +36,15 @@ export class BlockStmt extends Stmt {
     this.statements = statements;
   }
 }
+
+export class IfStmt extends Stmt {
+  condition: Expr;
+  thenBranch: Stmt;
+  elseBranch: Stmt;
+  constructor(condition: Expr, thenBranch: Stmt, elseBranch: Stmt) {
+    super();
+    this.condition = condition;
+    this.thenBranch = thenBranch;
+    this.elseBranch = elseBranch;
+  }
+}
