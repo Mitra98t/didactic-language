@@ -104,6 +104,9 @@ export class Parser {
     if (this.match([TokenType.WHILE])) {
       return this.whileStatement();
     }
+    if (this.match([TokenType.FOR])) {
+      return this.forStatement();
+    }
     if (this.match([TokenType.PRINT])) {
       return this.printStatement();
     }
@@ -126,6 +129,49 @@ export class Parser {
     }
 
     return new IfStmt(condition, thenBranch, elseBranch);
+  }
+
+  private forStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+    let initializer: Stmt;
+    if (this.match([TokenType.SEMICOLON])) {
+      initializer = Nil;
+    } else if (this.match([TokenType.VAR])) {
+      initializer = this.varDeclaration();
+    } else {
+      initializer = this.expressionStatement();
+    }
+
+    let condition: Expr = Nil;
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+    this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+    let increment: Expr = Nil;
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      increment = this.expression();
+    }
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    let body: Stmt = this.statement();
+
+    // Body is an array of statements that terminates with the increment expression
+    if (increment != Nil) {
+      body = new BlockStmt([body, new ExpressionStmt(increment)]);
+    }
+
+    if (condition == Nil) {
+      condition = new LiteralExpr(true);
+    }
+    body = new WhileStmt(condition, body);
+
+    if (initializer != Nil) {
+      body = new BlockStmt([initializer, body]);
+    }
+
+    return body;
   }
 
   private printStatement(): Stmt {

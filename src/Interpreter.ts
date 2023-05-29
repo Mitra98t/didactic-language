@@ -146,6 +146,7 @@ export class Interpreter {
   }
 
   public static execute(stmt: Stmt): void {
+    // console.log(stmt)
     if (stmt instanceof ExpressionStmt) {
       Interpreter.visitExpressionStmt(stmt);
     } else if (stmt instanceof IfStmt) {
@@ -203,7 +204,7 @@ export class Interpreter {
 
   public static visitVarStmt(stmt: VarStmt): void {
     let value: Object = Nil;
-    if (stmt.initializer !== null) {
+    if (stmt.initializer != Nil) {
       value = Interpreter.evaluate(stmt.initializer);
     }
     Interpreter.environment.define(stmt.name.lexeme, value);
