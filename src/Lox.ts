@@ -32,13 +32,11 @@ export class Lox {
   private static interpreter: Interpreter = new Interpreter();
 
   static main(args: string[]): void {
-    if (args.length > 1) {
+    if (args.length != 1) {
       console.log("Usage: tslox [script]");
       process.exit(64);
-    } else if (args.length == 1) {
-      Lox.runFile(args[0]);
     } else {
-      Lox.runPrompt();
+      Lox.runFile(args[0]);
     }
   }
 
@@ -53,21 +51,7 @@ export class Lox {
     }
   }
 
-  private static runPrompt(): void {
-    let input = process.stdin;
-    input.setEncoding("utf-8");
-    let exit = false;
-    while (!exit) {
-      process.stdout.write("> ");
-      input.on("data", function (data) {
-        if (Buffer.compare(data, Buffer.from("exit", "utf-8")) == 0) {
-          exit = true;
-        }
-        Lox.run(data.toString());
-        Lox.hadError = false;
-      });
-    }
-  }
+
 
   private static run(source: string): void {
     let scanner: Scanner = new Scanner(source);
