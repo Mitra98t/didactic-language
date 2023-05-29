@@ -48,3 +48,13 @@ export class IfStmt extends Stmt {
     this.elseBranch = elseBranch;
   }
 }
+
+export class WhileStmt extends Stmt {
+  condition: Expr;
+  body: Stmt;
+  constructor(condition: Expr, body: Stmt) {
+    super();
+    this.condition = condition;
+    this.body = body;
+  }
+}

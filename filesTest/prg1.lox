@@ -1,6 +1,12 @@
-if("" == 0){
-  print "true";
-}
-else{
-  print "false";
+var a = 0;
+
+while(a < 5){
+  if(a == 2){
+    print "a is 3";
+    a = a+2;
+  }
+  else{
+    print a;
+    a = a+1;
+  }
 }

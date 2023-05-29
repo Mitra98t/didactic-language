@@ -17,6 +17,7 @@ import {
   PrintStmt,
   Stmt,
   VarStmt,
+  WhileStmt,
 } from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -149,6 +150,8 @@ export class Interpreter {
       Interpreter.visitExpressionStmt(stmt);
     } else if (stmt instanceof IfStmt) {
       Interpreter.visitIfStmt(stmt);
+    } else if (stmt instanceof WhileStmt) {
+      Interpreter.visitWhileStmt(stmt);
     } else if (stmt instanceof PrintStmt) {
       Interpreter.visitPrintStmt(stmt);
     } else if (stmt instanceof VarStmt) {
@@ -187,7 +190,7 @@ export class Interpreter {
   public static visitIfStmt(stmt: IfStmt): void {
     if (Interpreter.isTruthly(Interpreter.evaluate(stmt.condition))) {
       Interpreter.execute(stmt.thenBranch);
-    } else if (stmt.elseBranch !== null) {
+    } else if (stmt.elseBranch !== Nil) {
       Interpreter.execute(stmt.elseBranch);
     }
   }
@@ -204,6 +207,12 @@ export class Interpreter {
       value = Interpreter.evaluate(stmt.initializer);
     }
     Interpreter.environment.define(stmt.name.lexeme, value);
+  }
+
+  public static visitWhileStmt(stmt: WhileStmt): void {
+    while (Interpreter.isTruthly(Interpreter.evaluate(stmt.condition))) {
+      Interpreter.execute(stmt.body);
+    }
   }
 
   public static visitAssignExpr(expr: AssignExpr): Object {
@@ -225,11 +234,11 @@ export class Interpreter {
       return object as boolean;
     }
 
-    if(typeof object === "number") {
-      return object as number !== 0;
+    if (typeof object === "number") {
+      return (object as number) !== 0;
     }
 
-    if(typeof object === "string") {
+    if (typeof object === "string") {
       return (object as string).length !== 0;
     }
 

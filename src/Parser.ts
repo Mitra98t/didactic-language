@@ -16,6 +16,7 @@ import {
   PrintStmt,
   Stmt,
   VarStmt,
+  WhileStmt,
 } from "./Statements";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
@@ -83,7 +84,14 @@ export class Parser {
     return new VarStmt(name, initializer);
   }
 
-  
+  private whileStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    let condition: Expr = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+    let body: Stmt = this.statement();
+
+    return new WhileStmt(condition, body);
+  }
 
   private expression(): Expr {
     return this.assignment();
@@ -92,6 +100,9 @@ export class Parser {
   private statement(): Stmt {
     if (this.match([TokenType.IF])) {
       return this.ifStatement();
+    }
+    if (this.match([TokenType.WHILE])) {
+      return this.whileStatement();
     }
     if (this.match([TokenType.PRINT])) {
       return this.printStatement();
