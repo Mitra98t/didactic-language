@@ -1,7 +1,1 @@
-fun Emma(a, b)
-  return a + b;
-}
-
-fun Emma(a, b, c)
-  return a + b + c;
-}
+var a = a;

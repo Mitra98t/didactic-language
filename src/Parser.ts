@@ -121,7 +121,7 @@ export class Parser {
     if (this.match([TokenType.LEFT_BRACE])) {
       return new BlockStmt(this.block());
     }
-    
+
     return this.expressionStatement();
   }
 
@@ -273,9 +273,7 @@ export class Parser {
       }
 
       this.error(equals, "Invalid assignment target.");
-    }
-    //TODO STAREQ & SLASHEQ
-    else if (
+    } else if (
       this.match([
         TokenType.PLUS_EQUAL,
         TokenType.MINUS_EQUAL,
@@ -488,7 +486,7 @@ export class Parser {
       return this.advance();
     }
 
-    throw new ParserError(this.peek(),message);
+    throw new ParserError(this.peek(), message);
   }
 
   private advance(): Token {
@@ -511,7 +509,7 @@ export class Parser {
   }
 
   private error(token: Token, message: string): ParserError {
-    let parserError: ParserError = new ParserError(token, message)
+    let parserError: ParserError = new ParserError(token, message);
     Lox.parserError(parserError);
     return parserError;
   }

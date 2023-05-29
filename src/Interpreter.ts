@@ -31,7 +31,9 @@ import { Token } from "./Token";
 import { TokenType } from "./TokenType";
 import { RuntimeError } from "./Errors";
 export class Interpreter {
-  private static environment: Environment = new Environment();
+  private static globals: Environment = new Environment();
+  private static environment: Environment = Interpreter.globals;
+  private static locals: Map<Expr, number> = new Map<Expr, number>();
   constructor() {}
 
   public interpret(statements: Stmt[]): void {
@@ -277,12 +279,18 @@ export class Interpreter {
 
   public static visitAssignExpr(expr: AssignExpr): Object {
     let value: Object = Interpreter.evaluate(expr.value);
+    let distance: number | undefined = Interpreter.locals.get(expr);
+    if (distance != undefined) {
+      Interpreter.environment.assignAt(distance, expr.name, value);
+    } else {
+      Interpreter.globals.assign(expr.name, value);
+    }
     Interpreter.environment.assign(expr.name, value);
     return value;
   }
 
   public static visitVariableExpr(expr: VariableExpr): Object {
-    return Interpreter.environment.get(expr.name);
+    return Interpreter.lookUpVariable(expr.name, expr);
   }
 
   private static isTruthly(object: Object): boolean {
@@ -332,5 +340,18 @@ export class Interpreter {
     } else {
       throw new ImpossibleError("Unreachable code. in checkNumberOperand");
     }
+  }
+
+  private static lookUpVariable(name: Token, expr: Expr): Object {
+    let distance: number | undefined = Interpreter.locals.get(expr);
+    if (distance !== undefined) {
+      return Interpreter.environment.getAt(distance, name.lexeme);
+    } else {
+      return Interpreter.globals.get(name);
+    }
+  }
+
+  resolve(expr: Expr, depth: number): void {
+    Interpreter.locals.set(expr, depth);
   }
 }

@@ -7,7 +7,13 @@ import { Parser } from "./Parser";
 import { prettyPrint } from "./Utility";
 import { Interpreter } from "./Interpreter";
 import { Stmt } from "./Statements";
-import { EnvironmentError, ParserError, RuntimeError } from "./Errors";
+import {
+  EnvironmentError,
+  ParserError,
+  ResolverError,
+  RuntimeError,
+} from "./Errors";
+import { Resolver } from "./Resolver";
 
 export class Nil extends Object {}
 
@@ -71,6 +77,10 @@ export class Lox {
     let statements: Stmt[] = parser.parse();
     if (Lox.hadError) return;
 
+    let resolver: Resolver = new Resolver(this.interpreter);
+    resolver.resolveStmts(statements);
+    if (Lox.hadError) return;
+
     this.interpreter.interpret(statements);
   }
 
@@ -80,6 +90,12 @@ export class Lox {
     } else {
       this.report(token.line, " at '" + token.lexeme + "'", message);
     }
+  }
+
+  public static resolverError(error: ResolverError): void {
+    console.log("resolver error");
+    console.error("[line " + error.token.line + "] " + error.message);
+    this.hadError = true;
   }
 
   public static errorLine(line: number, message: string): void {

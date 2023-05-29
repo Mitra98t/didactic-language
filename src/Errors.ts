@@ -13,7 +13,6 @@ export class RuntimeError extends Error {
 
 export class ImpossibleError extends Error {}
 
-
 export class ParserError extends Error {
   token: Token;
   constructor(token: Token, msg: string) {
@@ -26,5 +25,13 @@ export class ParserError extends Error {
 
   sayHello() {
     return "hello " + this.message;
+  }
+}
+
+export class ResolverError extends Error {
+  token: Token;
+  constructor(token: Token, message: string) {
+    super(message);
+    this.token = token;
   }
 }

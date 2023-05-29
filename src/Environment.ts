@@ -3,7 +3,7 @@ import { Token } from "./Token";
 
 export class Environment {
   enclosing: Environment | null = null;
-  private values: Map<string, Object> = new Map<string, Object>();
+  values: Map<string, Object> = new Map<string, Object>();
 
   constructor(enclosing: Environment | null = null) {
     this.enclosing = enclosing;
@@ -40,5 +40,28 @@ export class Environment {
     }
 
     throw new EnvironmentError(`Undefined variable '${name.lexeme}'.`);
+  }
+
+  public assignAt(distance: number, name: Token, value: Object): void {
+    this.ancestor(distance).values.set(name.lexeme, value);
+  }
+
+  public getAt(distance: number, name: string): Object {
+    let val = this.ancestor(distance).values.get(name);
+    if (val !== undefined) {
+      return val;
+    }
+    throw new EnvironmentError(`Undefined variable '${name}'.`);
+  }
+
+  public ancestor(distance: number): Environment {
+    let environment: Environment | null = this;
+    for (let i = 0; i < distance; i++) {
+      environment = environment!.enclosing;
+    }
+    if (environment === null) {
+      throw new Error("Environment is null");
+    }
+    return environment;
   }
 }
