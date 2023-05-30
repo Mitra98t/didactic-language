@@ -28,6 +28,7 @@ export class Scanner {
     ["true", TokenType.TRUE],
     ["var", TokenType.VAR],
     ["while", TokenType.WHILE],
+    ["length", TokenType.LENGTH],
   ]);
 
   constructor(source: string) {

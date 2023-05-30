@@ -43,6 +43,7 @@ export enum TokenType {
   FUN,
   FOR,
   IF,
+  LENGTH,
   NIL,
   OR,
   PRINT,

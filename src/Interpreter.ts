@@ -78,6 +78,9 @@ export class Interpreter {
         return -(right as number);
       case TokenType.BANG:
         return !Interpreter.isTruthly(right);
+      case TokenType.LENGTH:
+        Interpreter.checkLengthableOperand(expr.operator, right);
+        return (right as Array<Object>).length;
     }
 
     // Unreachable.
@@ -382,6 +385,26 @@ export class Interpreter {
     }
 
     return a === b;
+  }
+
+  private static checkLengthableOperand(
+    operator: Token,
+    operand: Object
+  ): void {
+    if (typeof operand === "string" || Array.isArray(operand)) {
+      return;
+    }
+    throw new RuntimeError(
+      operator,
+      `Operand must be a string or an array. ${operator}`
+    );
+  }
+
+  private static checkArrayOperand(operator: Token, operand: Object): void {
+    if (Array.isArray(operand)) {
+      return;
+    }
+    throw new RuntimeError(operator, `Operand must be an array. ${operator}`);
   }
 
   private static checkNumberOperand(operator: Token, operand: Object): void {

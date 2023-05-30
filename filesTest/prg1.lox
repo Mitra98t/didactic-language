@@ -1,17 +1,17 @@
-var a = [3,5,2,1,7,6,8,9,5,4];
-var n = 10;
-fun bubbleSort(arr, n) {
-  var a = arr;
-  for(var i = 0; i < n; i+=1){
-    for(var j = 0; j < n-1; j+=1){
-      if(a[j] > a[j+1]){
-        var temp = a[j];
-        a[j] = a[j+1];
-        a[j+1] = temp;
-      }
-    }
+var arr = [0,1,2,3,4];
+
+fun map(a, fn){
+  var result = [];
+  for(var i = 0; i < length a; i+=1){
+    result[i] = fn(a[i]);
   }
-  return a;
+  return result;
+}
+fun square(x){
+  return x + x;
 }
 
-print bubbleSort(a, n);
+var result = map(arr, square);
+
+assert result, [0,1,4,9,16];
+print "successo";

@@ -398,7 +398,7 @@ export class Parser {
   }
 
   private unary(): Expr {
-    if (this.match([TokenType.BANG, TokenType.MINUS])) {
+    if (this.match([TokenType.BANG, TokenType.MINUS, TokenType.LENGTH])) {
       let operator: Token = this.previous();
       let right: Expr = this.unary();
       return new UnaryExpr(operator, right);
@@ -427,7 +427,7 @@ export class Parser {
   private arrayAccess(): Expr {
     let expr: Expr = this.call();
     while (this.match([TokenType.LEFT_SQUARE])) {
-      let token:Token = this.previous()
+      let token: Token = this.previous();
       let index = this.expression();
       this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.");
       expr = new ArrayAccessExpr(expr, index, token);

@@ -1,12 +1,26 @@
 import { describe, expect, test } from "@jest/globals";
 import { Lox } from "../src/Lox";
 
-describe("sum of 1 and 2", () => {
+describe("Map Function", () => {
   function program1() {
     let source: string = `
-var a = 1;
-var b = 2;
-print a+b;
+    var arr = [0,1,2,3,4];
+
+    fun map(a, fn){
+      var result = [];
+      for(var i = 0; i < length a; i+=1){
+        result[i] = fn(a[i]);
+      }
+      return result;
+    }
+    fun square(x){
+      return x * x;
+    }
+    
+    var result = map(arr, square);
+    
+    assert result, [0,1,4,9,16];
+    print "successo";
 `;
     Lox.runForTest(source);
   }
@@ -14,7 +28,7 @@ print a+b;
   test("Check print", () => {
     const spy = jest.spyOn(console, "log");
     program1();
-    expect(spy).toHaveBeenCalledWith(3);
+    expect(spy).toHaveBeenCalledWith("successo");
   });
 });
 
