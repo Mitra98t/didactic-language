@@ -271,7 +271,7 @@ export class Parser {
       let value: Expr = this.assignment();
 
       if (expr instanceof ArrayAccessExpr)
-        return new AssignArrayExpr(expr, value);
+        return new AssignArrayExpr(expr, value, equals);
       if (expr instanceof VariableExpr) {
         let name: Token = expr.name;
         return new AssignExpr(name, value);
@@ -427,9 +427,10 @@ export class Parser {
   private arrayAccess(): Expr {
     let expr: Expr = this.call();
     while (this.match([TokenType.LEFT_SQUARE])) {
+      let token:Token = this.previous()
       let index = this.expression();
       this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.");
-      expr = new ArrayAccessExpr(expr, index);
+      expr = new ArrayAccessExpr(expr, index, token);
     }
 
     return expr;

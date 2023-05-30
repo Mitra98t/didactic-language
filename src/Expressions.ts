@@ -93,19 +93,23 @@ export class ArrayExpr extends Expr {
 export class ArrayAccessExpr extends Expr {
   arr: Expr;
   index: Expr;
-  constructor(arr: Expr, index: Expr) {
+  token: Token;
+  constructor(arr: Expr, index: Expr, token: Token) {
     super();
     this.arr = arr;
     this.index = index;
+    this.token = token;
   }
 }
 
 export class AssignArrayExpr extends Expr {
   arrayToAccess: Expr;
   value: Expr;
-  constructor(arrayToAccess: Expr, value: Expr) {
+  assigment: Token;
+  constructor(arrayToAccess: Expr, value: Expr, assigment: Token) {
     super();
     this.arrayToAccess = arrayToAccess;
     this.value = value;
+    this.assigment = assigment;
   }
 }

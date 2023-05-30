@@ -321,20 +321,20 @@ export class Interpreter {
     if (accesses instanceof ArrayAccessExpr) {
       let arrayV = Interpreter.evaluate(accesses.arr);
       let indexV = Interpreter.evaluate(accesses.index);
-      //TODO remove debug print
-      // console.log("arrayV");
-      // console.log(arrayV);
-      // console.log("indexV");
-      // console.log(indexV);
-      if (!Array.isArray(arrayV)) throw new Error(`is not an array.`);
+      if (!Array.isArray(arrayV))
+        throw new RuntimeError(expr.assigment, `is not an array.`);
       if (typeof indexV !== "number")
-        throw new Error(`Index of array must be a number.`);
-      if ((indexV as number) < 0 || (indexV as number) > arrayV.length)
-        throw new Error(`Index out of bound.`);
+        throw new RuntimeError(
+          expr.assigment,
+          `Index of array must be a number.`
+        );
+      console.log("array", arrayV.length, "index", indexV);
+      if (indexV < 0 || indexV > arrayV.length)
+        throw new RuntimeError(expr.assigment, `Index out of bound.`);
       arrayV[indexV as number] = value;
       return arrayV;
     } else {
-      throw new Error(`Not an array.`);
+      throw new RuntimeError(expr.assigment, `Not an array.`);
     }
   }
 
@@ -342,11 +342,12 @@ export class Interpreter {
   public static visitArrayAccessExpr(expr: ArrayAccessExpr): Object {
     let arrayV: Object = Interpreter.evaluate(expr.arr);
     let indexV: Object = Interpreter.evaluate(expr.index);
-    if (!Array.isArray(arrayV)) throw new Error(`is not an array.`);
+    if (!Array.isArray(arrayV))
+      throw new RuntimeError(expr.token, `is not an array.`);
     if (typeof indexV !== "number")
-      throw new Error(`Index of array must be a number.`);
-    if ((indexV as number) < 0 || (indexV as number) > arrayV.length)
-      throw new Error(`Index out of bound.`);
+      throw new RuntimeError(expr.token, `Index of array must be a number.`);
+    if (indexV < 0 || indexV >= arrayV.length)
+      throw new RuntimeError(expr.token, `Index out of bound.`);
     return arrayV[indexV as number];
   }
 
