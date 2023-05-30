@@ -1,10 +1,13 @@
-var mat = 
-[
-  [1,2],
-  [3,4]
-];
+fun a(){
+  print "a";
+}
 
-print mat;
-print mat[0];
-print mat[0][1];
+fun b(){
+  print "b";
+}
 
+var arr = [a, b];
+
+for(var i = 0; i < 2; i+=1){
+  (arr[i])();
+}

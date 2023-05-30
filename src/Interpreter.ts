@@ -3,6 +3,7 @@ import { EnvironmentError, ImpossibleError } from "./Errors";
 import {
   ArrayAccessExpr,
   ArrayExpr,
+  AssignArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -182,6 +183,8 @@ export class Interpreter {
       return Interpreter.visitArrayAccessExpr(expr);
     } else if (expr instanceof AssignExpr) {
       return Interpreter.visitAssignExpr(expr);
+    } else if (expr instanceof AssignArrayExpr) {
+      return Interpreter.visitAssignArrayExpr(expr);
     } else if (expr instanceof CallExpr) {
       return Interpreter.visitCallExpr(expr);
     } else if (expr instanceof ArrayExpr) {
@@ -311,8 +314,28 @@ export class Interpreter {
     return value;
   }
 
-  public static visitVariableExpr(expr: VariableExpr): Object {
-    return Interpreter.lookUpVariable(expr.name, expr);
+  public static visitAssignArrayExpr(expr: AssignArrayExpr): Object {
+    let value: Object = Interpreter.evaluate(expr.value);
+    let distance: number | undefined = Interpreter.locals.get(expr);
+    let accesses: Expr = expr.arrayToAccess;
+    if (accesses instanceof ArrayAccessExpr) {
+      let arrayV = Interpreter.evaluate(accesses.arr);
+      let indexV = Interpreter.evaluate(accesses.index);
+      //TODO remove debug print
+      // console.log("arrayV");
+      // console.log(arrayV);
+      // console.log("indexV");
+      // console.log(indexV);
+      if (!Array.isArray(arrayV)) throw new Error(`is not an array.`);
+      if (typeof indexV !== "number")
+        throw new Error(`Index of array must be a number.`);
+      if ((indexV as number) < 0 || (indexV as number) > arrayV.length)
+        throw new Error(`Index out of bound.`);
+      arrayV[indexV as number] = value;
+      return arrayV;
+    } else {
+      throw new Error(`Not an array.`);
+    }
   }
 
   //TODO convert to RuntimeArray
@@ -325,6 +348,10 @@ export class Interpreter {
     if ((indexV as number) < 0 || (indexV as number) > arrayV.length)
       throw new Error(`Index out of bound.`);
     return arrayV[indexV as number];
+  }
+
+  public static visitVariableExpr(expr: VariableExpr): Object {
+    return Interpreter.lookUpVariable(expr.name, expr);
   }
 
   private static isTruthly(object: Object): boolean {

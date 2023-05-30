@@ -63,6 +63,7 @@ export class Lox {
 
     let resolver: Resolver = new Resolver(this.interpreter);
     resolver.resolveStmts(statements);
+
     if (Lox.hadError) return;
 
     this.interpreter.interpret(statements);

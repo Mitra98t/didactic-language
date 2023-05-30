@@ -1,6 +1,7 @@
 import {
   ArrayAccessExpr,
   ArrayExpr,
+  AssignArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -269,6 +270,8 @@ export class Parser {
       let equals: Token = this.previous();
       let value: Expr = this.assignment();
 
+      if (expr instanceof ArrayAccessExpr)
+        return new AssignArrayExpr(expr, value);
       if (expr instanceof VariableExpr) {
         let name: Token = expr.name;
         return new AssignExpr(name, value);
@@ -422,8 +425,8 @@ export class Parser {
     This case is currently unsupported
   */
   private arrayAccess(): Expr {
-    let expr: Expr = this.expression();
-    if (this.match([TokenType.LEFT_SQUARE])) {
+    let expr: Expr = this.call();
+    while (this.match([TokenType.LEFT_SQUARE])) {
       let index = this.expression();
       this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.");
       expr = new ArrayAccessExpr(expr, index);
@@ -440,7 +443,7 @@ export class Parser {
         if (args.length >= 255) {
           this.error(this.peek(), "Cannot have more than 255 arguments.");
         }
-        args.push(this.expression());
+        args.push(this.or());
       } while (this.match([TokenType.COMMA]));
     }
 
@@ -468,11 +471,6 @@ export class Parser {
 
     if (this.match([TokenType.IDENTIFIER])) {
       let name: Token = this.previous();
-      // if (this.match([TokenType.LEFT_SQUARE])) {
-      //   let index: Expr = this.expression();
-      //   this.consume(TokenType.RIGHT_SQUARE, "Expected ']' after index.")
-      //   return new ArrayAccessExpr(name, index)
-      // }
       return new VariableExpr(name);
     }
 
@@ -536,6 +534,13 @@ export class Parser {
 
   private peek(): Token {
     return this.tokens[this.current];
+  }
+
+  private peekNext(): Token {
+    if (this.isAtEnd()) {
+      return this.peek();
+    }
+    return this.tokens[this.current + 1];
   }
 
   private previous(): Token {

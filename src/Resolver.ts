@@ -2,6 +2,7 @@ import { ResolverError } from "./Errors";
 import {
   ArrayAccessExpr,
   ArrayExpr,
+  AssignArrayExpr,
   AssignExpr,
   BinaryExpr,
   CallExpr,
@@ -77,6 +78,11 @@ export class Resolver {
   visitAssignExpr(expr: AssignExpr): void {
     this.resolveExpr(expr.value);
     this.resolveLocal(expr, expr.name);
+  }
+
+  visitAssignArrayExpr(expr: AssignArrayExpr): void {
+    this.resolveExpr(expr.arrayToAccess);
+    this.resolveExpr(expr.value);
   }
 
   visitFunctionStmt(stmt: FunctionStmt): void {
@@ -196,6 +202,8 @@ export class Resolver {
       this.visitAssignExpr(expr);
     } else if (expr instanceof CallExpr) {
       this.visitCallExpr(expr);
+    } else if (expr instanceof AssignArrayExpr) {
+      this.visitAssignArrayExpr(expr);
     } else if (expr instanceof BinaryExpr) {
       this.visitBinaryExpr(expr);
     } else if (expr instanceof GroupingExpr) {

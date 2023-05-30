@@ -99,3 +99,13 @@ export class ArrayAccessExpr extends Expr {
     this.index = index;
   }
 }
+
+export class AssignArrayExpr extends Expr {
+  arrayToAccess: Expr;
+  value: Expr;
+  constructor(arrayToAccess: Expr, value: Expr) {
+    super();
+    this.arrayToAccess = arrayToAccess;
+    this.value = value;
+  }
+}
