@@ -193,7 +193,6 @@ export class Interpreter {
   }
 
   public static execute(stmt: Stmt): void {
-    // console.log(stmt)
     if (stmt instanceof ExpressionStmt) {
       Interpreter.visitExpressionStmt(stmt);
     } else if (stmt instanceof IfStmt) {
@@ -328,7 +327,6 @@ export class Interpreter {
           expr.assigment,
           `Index of array must be a number.`
         );
-      console.log("array", arrayV.length, "index", indexV);
       if (indexV < 0 || indexV > arrayV.length)
         throw new RuntimeError(expr.assigment, `Index out of bound.`);
       arrayV[indexV as number] = value;

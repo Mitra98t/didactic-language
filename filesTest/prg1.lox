@@ -1,0 +1,17 @@
+var a = [3,5,2,1,7,6,8,9,5,4];
+var n = 10;
+fun bubbleSort(arr, n) {
+  var a = arr;
+  for(var i = 0; i < n; i+=1){
+    for(var j = 0; j < n-1; j+=1){
+      if(a[j] > a[j+1]){
+        var temp = a[j];
+        a[j] = a[j+1];
+        a[j+1] = temp;
+      }
+    }
+  }
+  return a;
+}
+
+print bubbleSort(a, n);

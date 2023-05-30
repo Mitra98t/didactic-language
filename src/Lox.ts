@@ -2,9 +2,7 @@ import * as fs from "fs";
 import { Scanner } from "./Scanner";
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
-import { Expr } from "./Expressions";
 import { Parser } from "./Parser";
-import { prettyPrint } from "./Utility";
 import { Interpreter } from "./Interpreter";
 import { Stmt } from "./Statements";
 import {
@@ -51,8 +49,6 @@ export class Lox {
     }
   }
 
-
-
   private static run(source: string): void {
     let scanner: Scanner = new Scanner(source);
     let tokens: Token[] = scanner.scanTokens();
@@ -67,6 +63,10 @@ export class Lox {
     if (Lox.hadError) return;
 
     this.interpreter.interpret(statements);
+  }
+
+  public static runForTest(source: string): void {
+    Lox.run(source);
   }
 
   public static errorToken(token: Token, message: string): void {
