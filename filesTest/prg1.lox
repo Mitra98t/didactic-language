@@ -1,13 +1,17 @@
-fun a(){
-  print "a";
+//boubble sort
+fun boubbleSort(arr, len){
+  for(var i = 0; i < len; i+=1){
+    for(var j = 0; j < len - i - 1; j+=1){
+      if(arr[j] > arr[j + 1]){
+        var temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp; 
+      }
+    }
+  }
+  return arr;
 }
 
-fun b(){
-  print "b";
-}
+var arr = [4,3,6,1,8,9];
 
-var arr = [a, b];
-
-for(var i = 0; i < 2; i+=1){
-  (arr[i])();
-}
+print boubbleSort(arr, 6);
