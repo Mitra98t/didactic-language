@@ -8,9 +8,12 @@ import {
   BinaryExpr,
   CallExpr,
   Expr,
+  GetExpr,
   GroupingExpr,
   LiteralExpr,
   LogicalExpr,
+  SetExpr,
+  ThisExpr,
   UnaryExpr,
   VariableExpr,
 } from "./Expressions";
@@ -21,6 +24,7 @@ import { Return } from "./Return";
 import {
   AssertStmt,
   BlockStmt,
+  ClassStmt,
   ExpressionStmt,
   FunctionStmt,
   IfStmt,
@@ -33,6 +37,9 @@ import {
 import { Token } from "./Token";
 import { TokenType } from "./TokenType";
 import { RuntimeError } from "./Errors";
+import { LoxClass } from "./LoxClass";
+import { LoxInstance } from "./LoxInstance";
+import { prettyPrint } from "./Utility";
 export class Interpreter {
   private static globals: Environment = new Environment();
   private static environment: Environment = Interpreter.globals;
@@ -67,6 +74,22 @@ export class Interpreter {
     }
 
     return Interpreter.evaluate(expr.right);
+  }
+
+  public static visitSetExpr(expr: SetExpr): Object {
+    let object: Object = Interpreter.evaluate(expr.object);
+
+    if (!(object instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    let value: Object = Interpreter.evaluate(expr.value);
+    (object as LoxInstance).set(expr.name, value);
+    return value;
+  }
+
+  public static visitThisExpr(expr: ThisExpr): Object {
+    return Interpreter.lookUpVariable(expr.keyword, expr);
   }
 
   public static visitUnaryExpr(expr: UnaryExpr): Object {
@@ -161,6 +184,15 @@ export class Interpreter {
     return func.call(new Interpreter(), args);
   }
 
+  private static visitGetExpr(expr: GetExpr): Object {
+    let object: Object = Interpreter.evaluate(expr.object);
+    if (object instanceof LoxInstance) {
+      return (object as LoxInstance).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties.");
+  }
+
   private static visitArrayExpr(expr: ArrayExpr): Object[] {
     let values: Object[] = [];
     for (const e of expr.values) {
@@ -192,6 +224,12 @@ export class Interpreter {
       return Interpreter.visitCallExpr(expr);
     } else if (expr instanceof ArrayExpr) {
       return Interpreter.visitArrayExpr(expr);
+    } else if (expr instanceof GetExpr) {
+      return Interpreter.visitGetExpr(expr);
+    } else if (expr instanceof SetExpr) {
+      return Interpreter.visitSetExpr(expr);
+    } else if (expr instanceof ThisExpr) {
+      return Interpreter.visitThisExpr(expr);
     } else throw new ImpossibleError("Unreachable code.");
   }
 
@@ -212,6 +250,8 @@ export class Interpreter {
       Interpreter.visitBlockStmt(stmt);
     } else if (stmt instanceof FunctionStmt) {
       Interpreter.visitFunctionStmt(stmt);
+    } else if (stmt instanceof ClassStmt) {
+      Interpreter.visitClassStmt(stmt);
     } else if (stmt instanceof ReturnStmt) {
       Interpreter.visitReturnStmt(stmt);
     } else {
@@ -238,13 +278,34 @@ export class Interpreter {
     );
   }
 
+  public static visitClassStmt(stmt: ClassStmt): void {
+    Interpreter.environment.define(stmt.name.lexeme, Nil);
+    let methods: Map<string, LoxFunction> = new Map();
+
+    for (const method of stmt.methods) {
+      let funktion: LoxFunction = new LoxFunction(
+        method,
+        Interpreter.environment,
+        method.name.lexeme === "init"
+      );
+      methods.set(method.name.lexeme, funktion);
+    }
+
+    let klass: LoxClass = new LoxClass(stmt.name.lexeme, methods);
+    Interpreter.environment.assign(stmt.name, klass);
+  }
+
   public static visitExpressionStmt(stmt: ExpressionStmt): void {
     let value: Object = Interpreter.evaluate(stmt.expression);
     return;
   }
 
   public static visitFunctionStmt(stmt: FunctionStmt): void {
-    let func: LoxFunction = new LoxFunction(stmt, Interpreter.environment);
+    let func: LoxFunction = new LoxFunction(
+      stmt,
+      Interpreter.environment,
+      false
+    );
     Interpreter.environment.define(stmt.name.lexeme, func);
   }
 
@@ -258,7 +319,13 @@ export class Interpreter {
 
   public static visitPrintStmt(stmt: PrintStmt): void {
     let value: Object = Interpreter.evaluate(stmt.expression);
-    if (value instanceof LoxFunction) console.log(value.toString());
+    if (
+      value instanceof LoxFunction ||
+      value instanceof LoxClass ||
+      value instanceof LoxCallable ||
+      value instanceof LoxInstance
+    )
+      console.log(value.toString());
     else console.log(value);
     return;
   }

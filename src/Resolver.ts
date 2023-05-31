@@ -7,9 +7,12 @@ import {
   BinaryExpr,
   CallExpr,
   Expr,
+  GetExpr,
   GroupingExpr,
   LiteralExpr,
   LogicalExpr,
+  SetExpr,
+  ThisExpr,
   UnaryExpr,
   VariableExpr,
 } from "./Expressions";
@@ -19,6 +22,7 @@ import { LoxFunction } from "./LoxFunction";
 import {
   AssertStmt,
   BlockStmt,
+  ClassStmt,
   ExpressionStmt,
   FunctionStmt,
   IfStmt,
@@ -33,12 +37,20 @@ import { Token } from "./Token";
 export enum FunctionType {
   NONE,
   FUNCTION,
+  METHOD,
+  INITIALIZER,
+}
+
+export enum ClassType {
+  NONE,
+  CLASS,
 }
 
 export class Resolver {
   private interpreter: Interpreter;
   private scopes: Map<string, boolean>[] = [new Map<string, boolean>()];
   private currentFunction: FunctionType = FunctionType.NONE;
+  private currentClass: ClassType = ClassType.NONE;
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
@@ -48,6 +60,28 @@ export class Resolver {
     this.beginScope();
     this.resolveStmts(stmt.statements);
     this.endScope();
+  }
+
+  public visitClassStmt(stmt: ClassStmt): void {
+    let enclosingClass = this.currentClass;
+    this.currentClass = ClassType.CLASS;
+
+    this.declare(stmt.name);
+    this.define(stmt.name);
+
+    this.beginScope();
+    this.scopes[this.scopes.length - 1].set("this", true);
+
+    for (let method of stmt.methods) {
+      let declaration = FunctionType.METHOD;
+      if (method.name.lexeme == "init") {
+        declaration = FunctionType.INITIALIZER;
+      }
+      this.resolveFunction(method, declaration);
+    }
+
+    this.endScope();
+    this.currentClass = enclosingClass;
   }
 
   visitVarStmt(stmt: VarStmt): void {
@@ -118,6 +152,14 @@ export class Resolver {
       );
     }
     if (stmt.value != Nil) {
+      if (this.currentFunction == FunctionType.INITIALIZER) {
+        Lox.resolverError(
+          new ResolverError(
+            stmt.keyword,
+            "Can't return a value from an initializer."
+          )
+        );
+      }
       this.resolveExpr(stmt.value);
     }
   }
@@ -139,6 +181,10 @@ export class Resolver {
     }
   }
 
+  visitGetExpr(expr: GetExpr): void {
+    this.resolveExpr(expr.object);
+  }
+
   visitGroupingExpr(expr: GroupingExpr): void {
     this.resolveExpr(expr.expression);
   }
@@ -150,6 +196,21 @@ export class Resolver {
   visitLogicalExpr(expr: LogicalExpr): void {
     this.resolveExpr(expr.left);
     this.resolveExpr(expr.right);
+  }
+
+  visitSetExpr(expr: SetExpr): void {
+    this.resolveExpr(expr.value);
+    this.resolveExpr(expr.object);
+  }
+
+  visitThisExpr(expr: ThisExpr): void {
+    if (this.currentClass == ClassType.NONE) {
+      Lox.resolverError(
+        new ResolverError(expr.keyword, "Cannot use 'this' outside of a class.")
+      );
+      return;
+    }
+    this.resolveLocal(expr, expr.keyword);
   }
 
   visitUnaryExpr(expr: UnaryExpr): void {
@@ -190,6 +251,8 @@ export class Resolver {
       this.visitReturnStmt(statement);
     } else if (statement instanceof WhileStmt) {
       this.visitWhileStmt(statement);
+    } else if (statement instanceof ClassStmt) {
+      this.visitClassStmt(statement);
     } else {
       throw new Error("Unknown statement type");
     }
@@ -218,6 +281,12 @@ export class Resolver {
       this.visitArrayExpr(expr);
     } else if (expr instanceof ArrayAccessExpr) {
       this.visitArrayAccessExpr(expr);
+    } else if (expr instanceof GetExpr) {
+      this.visitGetExpr(expr);
+    } else if (expr instanceof SetExpr) {
+      this.visitSetExpr(expr);
+    } else if (expr instanceof ThisExpr) {
+      this.visitThisExpr(expr);
     } else {
       throw new Error(`Unknown expression type ${JSON.stringify(expr)}`);
     }

@@ -113,3 +113,33 @@ export class AssignArrayExpr extends Expr {
     this.assigment = assigment;
   }
 }
+
+export class GetExpr extends Expr {
+  object: Expr;
+  name: Token;
+  constructor(object: Expr, name: Token) {
+    super();
+    this.object = object;
+    this.name = name;
+  }
+}
+
+export class SetExpr extends Expr {
+  object: Expr;
+  name: Token;
+  value: Expr;
+  constructor(object: Expr, name: Token, value: Expr) {
+    super();
+    this.object = object;
+    this.name = name;
+    this.value = value;
+  }
+}
+
+export class ThisExpr extends Expr {
+  keyword: Token;
+  constructor(keyword: Token) {
+    super();
+    this.keyword = keyword;
+  }
+}

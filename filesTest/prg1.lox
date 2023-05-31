@@ -1,17 +1,14 @@
-var arr = [0,1,2,3,4];
-
-fun map(a, fn){
-  var result = [];
-  for(var i = 0; i < length a; i+=1){
-    result[i] = fn(a[i]);
+class Rectangle{
+  init(shortSide, longSide){
+    this.shortSide = shortSide;
+    this.longSide = longSide;
   }
-  return result;
-}
-fun square(x){
-  return x + x;
+
+  getArea(){
+    return this.shortSide * this.longSide;
+  }
 }
 
-var result = map(arr, square);
+var rect = Rectangle(4, 8);
 
-assert result, [0,1,4,9,16];
-print "successo";
+print rect.getArea();

@@ -92,3 +92,13 @@ export class ReturnStmt extends Stmt {
     this.value = value;
   }
 }
+
+export class ClassStmt extends Stmt {
+  name: Token;
+  methods: FunctionStmt[];
+  constructor(name: Token, methods: FunctionStmt[]) {
+    super();
+    this.name = name;
+    this.methods = methods;
+  }
+}
