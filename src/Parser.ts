@@ -500,7 +500,7 @@ export class Parser {
       return new LiteralExpr(this.previous().literal);
     }
 
-    if(this.match([TokenType.THIS])){
+    if (this.match([TokenType.THIS])) {
       return new ThisExpr(this.previous())
     }
 
